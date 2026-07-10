@@ -1,29 +1,30 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_caching import Cache
 import requests
 import joblib
 import pandas as pd
 from datetime import datetime
-import os 
+from zoneinfo import ZoneInfo
+import os
 import subprocess
 
 app = Flask(__name__)
 CORS(app)
 
 # ==========================================
-# 1. Cargar los Modelos Predictivos Guardados
+# 0. Configuración de Caché y Zona Horaria
 # ==========================================
-# Obtenemos la ruta exacta de donde está guardado ESTE script (app.py)
-DIRECTORIO_ACTUAL = os.path.dirname(os.path.abspath(__file__))
-RUTA_MODELO = os.path.join(DIRECTORIO_ACTUAL, 'modelo_apagones.pkl')
-RUTA_MODELO_ZONAL = os.path.join(DIRECTORIO_ACTUAL, 'modelo_apagones_zonas.pkl')
+cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 900})
+cache.init_app(app)
 
-try:
-    modelo = joblib.load(RUTA_MODELO)
-    print("Modelo global cargado exitosamente.")
-except FileNotFoundError:
-    modelo = None
-    print(f"Advertencia: No se encontró el modelo global en: {RUTA_MODELO}")
+ZONA_LOCAL = ZoneInfo("America/Mexico_City")
+
+# ==========================================
+# 1. Cargar el Modelo Predictivo Zonal
+# ==========================================
+DIRECTORIO_ACTUAL = os.path.dirname(os.path.abspath(__file__))
+RUTA_MODELO_ZONAL = os.path.join(DIRECTORIO_ACTUAL, 'modelo_apagones_zonas.pkl')
 
 try:
     paquete_zonal = joblib.load(RUTA_MODELO_ZONAL)
@@ -44,82 +45,75 @@ URL_CLIMA = f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={L
 # 2. Endpoint de Predicción en Tiempo Real
 # ==========================================
 @app.route('/api/prediccion_actual', methods=['GET'])
+@cache.cached(timeout=900)
 def obtener_prediccion_actual():
-    if modelo is None:
+    if modelo_zonal is None or columnas_zonal is None:
         return jsonify({
             "estatus": "error",
-            "mensaje": "El modelo predictivo no está disponible en el servidor."
+            "mensaje": "El modelo predictivo zonal no está disponible."
         }), 500
 
     try:
-        # A. Consultar las condiciones ambientales actuales (Hardware Virtual)
+        # A. Consultar clima
         respuesta_clima = requests.get(URL_CLIMA)
         if respuesta_clima.status_code != 200:
             raise Exception("No se pudo obtener información de la API de clima.")
-            
+
         datos_actuales = respuesta_clima.json()["current"]
 
-        # B. Extraer las variables de tiempo actuales
-        fecha_actual = datetime.now()
+        # B. Variables de tiempo locales
+        fecha_actual = datetime.now(ZONA_LOCAL)
         hora_del_dia = fecha_actual.hour
-        dia_semana = fecha_actual.weekday() # 0 = Lunes, 6 = Domingo
+        dia_semana = fecha_actual.weekday() 
 
-        # C. Estructurar los datos exactamente como los espera el modelo global
-        caracteristicas = pd.DataFrame([{
-            'temperatura': datos_actuales["temperature_2m"],
-            'sensacion_termica': datos_actuales["apparent_temperature"],
-            'humedad': datos_actuales["relative_humidity_2m"],
-            'velocidad_viento': datos_actuales["wind_speed_10m"],
-            'codigo_clima': datos_actuales["weather_code"],
-            'hora_del_dia': hora_del_dia,
-            'dia_semana': dia_semana
-        }])
-
-        # D. Calcular la probabilidad del apagón global
-        probabilidades = modelo.predict_proba(caracteristicas)[0]
-        probabilidad_apagon = probabilidades[1]
-
-        # E. Calcular la probabilidad de apagón por colonia
+        # C & D. Calcular probabilidad por colonia y extraer promedio global
         riesgo_por_colonia = {}
-        if modelo_zonal is not None and columnas_zonal is not None:
-            colonias = [
-                "11 de julio", "centro", "las guacamayas", "la mira", "playa azul",
-                "fideicomiso", "campamento", "pie de casa", "las truchas", 
-                "primer sector", "segundo sector", "tercer sector", "lotes y servicios",
-                "corregidora", "la orillita", "buenos aires"
-            ]
-            
-            filas_prediccion = []
-            for col in colonias:
-                fila = {
-                    'temperatura': datos_actuales["temperature_2m"],
-                    'sensacion_termica': datos_actuales["apparent_temperature"],
-                    'humedad': datos_actuales["relative_humidity_2m"],
-                    'velocidad_viento': datos_actuales["wind_speed_10m"],
-                    'codigo_clima': datos_actuales["weather_code"],
-                    'hora_del_dia': hora_del_dia,
-                    'dia_semana': dia_semana
-                }
-                
-                # Inicializamos todas las variables dummy de colonia en 0, y en 1 si coincide
-                for c_col in columnas_zonal:
-                    if c_col.startswith('colonia_'):
-                        col_nombre = c_col.replace('colonia_', '')
-                        fila[c_col] = 1 if col_nombre == col else 0
-                
-                filas_prediccion.append(fila)
-            
-            # Crear DataFrame ordenado igual que columnas_zonal
-            df_zonal = pd.DataFrame(filas_prediccion, columns=columnas_zonal)
-            probabilidades_zonales = modelo_zonal.predict_proba(df_zonal)[:, 1]
-            
-            for idx, col in enumerate(colonias):
-                nombre_amigable = col.title()
-                if col == "fideicomiso":
-                    nombre_amigable = "Fideicomiso (cerca del ITLAC)"
-                riesgo_por_colonia[nombre_amigable] = round(float(probabilidades_zonales[idx]) * 100, 2)
+        probabilidad_apagon = 0
+        
+        colonias = [
+            "11 de julio", "centro", "las guacamayas", "la mira", "playa azul",
+            "fideicomiso", "campamento", "pie de casa", "las truchas",
+            "primer sector", "segundo sector", "tercer sector", "lotes y servicios",
+            "corregidora", "la orillita", "buenos aires"
+        ]
 
-        # F. Enviar respuesta JSON estructurada al Frontend
+        filas_prediccion = []
+        for col in colonias:
+            fila = {
+                'temperatura': datos_actuales["temperature_2m"],
+                'sensacion_termica': datos_actuales["apparent_temperature"],
+                'humedad': datos_actuales["relative_humidity_2m"],
+                'velocidad_viento': datos_actuales["wind_speed_10m"],
+                'codigo_clima': datos_actuales["weather_code"],
+                'hora_del_dia': hora_del_dia,
+                'dia_semana': dia_semana
+            }
+
+            for c_col in columnas_zonal:
+                if c_col.startswith('colonia_'):
+                    col_nombre = c_col.replace('colonia_', '')
+                    fila[c_col] = 1 if col_nombre == col else 0
+
+            filas_prediccion.append(fila)
+
+        # Predicción masiva
+        df_zonal = pd.DataFrame(filas_prediccion, columns=columnas_zonal)
+        probabilidades_zonales = modelo_zonal.predict_proba(df_zonal)[:, 1]
+
+        # Extraer riesgos y sumar para el promedio
+        suma_riesgos = 0
+        for idx, col in enumerate(colonias):
+            nombre_amigable = col.title()
+            if col == "fideicomiso":
+                nombre_amigable = "Fideicomiso (cerca del ITLAC)"
+            
+            riesgo_individual = round(float(probabilidades_zonales[idx]) * 100, 2)
+            riesgo_por_colonia[nombre_amigable] = riesgo_individual
+            suma_riesgos += riesgo_individual
+
+        # El nuevo Riesgo Global es el PROMEDIO EXACTO
+        probabilidad_apagon = round(suma_riesgos / len(colonias), 2)
+
         return jsonify({
             "estatus": "exito",
             "fecha_consulta": fecha_actual.strftime("%Y-%m-%d %H:%M:%S"),
@@ -133,7 +127,7 @@ def obtener_prediccion_actual():
                 "hora_militar": hora_del_dia,
                 "dia_semana_index": dia_semana
             },
-            "probabilidad_apagon_porcentaje": round(float(probabilidad_apagon) * 100, 2),
+            "probabilidad_apagon_porcentaje": probabilidad_apagon,
             "riesgo_por_colonia": riesgo_por_colonia
         })
 
@@ -143,45 +137,33 @@ def obtener_prediccion_actual():
             "mensaje": f"Falla en el procesamiento: {str(e)}"
         }), 500
 
+
 # ==========================================
-# 2.5 Endpoint Secreto para el Cron Job
+# 3. Endpoints Secretos para Cron Jobs
 # ==========================================
 @app.route('/api/ejecutar-scraper', methods=['GET'])
 def ejecutar_scraper():
     token = request.args.get('token')
-
-    # Verificación de seguridad básica
     if token != 'rona2026':
         return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
-
     try:
-        # Esto abre tu script en segundo plano sin congelar la API
         subprocess.Popen(["python3", "scraper_colonias.py"])
         return jsonify({"estatus": "exito", "mensaje": "Barrido de noticias iniciado correctamente."})
     except Exception as e:
         return jsonify({"estatus": "error", "mensaje": str(e)}), 500
 
-# ==========================================
-# 2.6 Endpoint Secreto para Reentrenar la IA
-# ==========================================
 @app.route('/api/reentrenar-ia', methods=['GET'])
 def reentrenar_ia():
     token = request.args.get('token')
-
     if token != 'rona2026':
         return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
-
     try:
-        # shell=True permite concatenar comandos. Primero crea el CSV, luego entrena.
         comando = "python3 crear_dataset.py && python3 entrenar_modelo.py"
         subprocess.Popen(comando, shell=True)
         return jsonify({"estatus": "exito", "mensaje": "Generación de dataset y reentrenamiento iniciados."})
     except Exception as e:
         return jsonify({"estatus": "error", "mensaje": str(e)}), 500
 
-# ==========================================
-# 3. Inicialización del Servidor
-# ==========================================
+
 if __name__ == '__main__':
-    # Ejecuta el servidor local en el puerto 5000 con recarga automática para desarrollo
     app.run(debug=True, port=5000)
