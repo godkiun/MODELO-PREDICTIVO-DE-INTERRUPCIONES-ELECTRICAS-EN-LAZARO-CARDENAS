@@ -4,7 +4,8 @@ import requests
 import joblib
 import pandas as pd
 from datetime import datetime
-import os # <-- Añadir esta librería
+import os 
+import subprocess
 
 app = Flask(__name__)
 CORS(app)
@@ -141,6 +142,42 @@ def obtener_prediccion_actual():
             "estatus": "error",
             "mensaje": f"Falla en el procesamiento: {str(e)}"
         }), 500
+
+# ==========================================
+# 2.5 Endpoint Secreto para el Cron Job
+# ==========================================
+@app.route('/api/ejecutar-scraper', methods=['GET'])
+def ejecutar_scraper():
+    token = request.args.get('token')
+
+    # Verificación de seguridad básica
+    if token != 'rona2026':
+        return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
+
+    try:
+        # Esto abre tu script en segundo plano sin congelar la API
+        subprocess.Popen(["python3", "scraper_colonias.py"])
+        return jsonify({"estatus": "exito", "mensaje": "Barrido de noticias iniciado correctamente."})
+    except Exception as e:
+        return jsonify({"estatus": "error", "mensaje": str(e)}), 500
+
+# ==========================================
+# 2.6 Endpoint Secreto para Reentrenar la IA
+# ==========================================
+@app.route('/api/reentrenar-ia', methods=['GET'])
+def reentrenar_ia():
+    token = request.args.get('token')
+
+    if token != 'rona2026':
+        return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
+
+    try:
+        # shell=True permite concatenar comandos. Primero crea el CSV, luego entrena.
+        comando = "python3 crear_dataset.py && python3 entrenar_modelo.py"
+        subprocess.Popen(comando, shell=True)
+        return jsonify({"estatus": "exito", "mensaje": "Generación de dataset y reentrenamiento iniciados."})
+    except Exception as e:
+        return jsonify({"estatus": "error", "mensaje": str(e)}), 500
 
 # ==========================================
 # 3. Inicialización del Servidor
