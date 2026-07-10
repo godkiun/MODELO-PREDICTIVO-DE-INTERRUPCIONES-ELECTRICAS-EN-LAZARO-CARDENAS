@@ -27,7 +27,7 @@ export default function Dashboard() {
   useEffect(() => {
     const obtenerPrediccion = async () => {
       try {
-        const respuesta = await fetch('http://127.0.0.1:5000/api/prediccion_actual');
+        const respuesta = await fetch('https://ronadev.pythonanywhere.com/api/prediccion_actual');
         if (!respuesta.ok) throw new Error('Error al conectar con el servidor Flask');
         
         const data: DatosPrediccion = await respuesta.json();
