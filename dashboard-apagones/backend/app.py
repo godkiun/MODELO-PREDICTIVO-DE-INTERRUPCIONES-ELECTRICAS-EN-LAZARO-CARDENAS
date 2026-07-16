@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, request
-from flask.cli import load_dotenv
 from flask_cors import CORS
 from flask_caching import Cache
 import requests
@@ -145,8 +144,6 @@ def obtener_prediccion_actual():
 # ==========================================
 # 3. Endpoints Secretos para Cron Jobs
 # ==========================================
-
-# En tu ruta del cron job:
 @app.route('/api/ejecutar-scraper', methods=['GET'])
 def ejecutar_scraper():
     token = request.args.get('token')
@@ -155,6 +152,16 @@ def ejecutar_scraper():
     
     if token != TOKEN_SECRETO:
         return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
+    
+    try:
+        # 1. Crear ruta absoluta al archivo
+        ruta_scraper = os.path.join(DIRECTORIO_ACTUAL, 'scraper_colonias.py')
+
+        # 2. Ejecutar con la ruta completa
+        subprocess.Popen(["python3", ruta_scraper])
+        return jsonify({"estatus": "exito", "mensaje": "Barrido de noticias iniciado correctamente."})
+    except Exception as e:
+        return jsonify({"estatus": "error", "mensaje": str(e)}), 500
 
 @app.route('/api/reentrenar-ia', methods=['GET'])
 def reentrenar_ia():
@@ -165,7 +172,13 @@ def reentrenar_ia():
     if token != TOKEN_SECRETO:
         return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
     try:
-        comando = "python3 crear_dataset.py && python3 entrenar_modelo.py"
+        # 1. Crear rutas absolutas a ambos archivos
+        ruta_dataset = os.path.join(DIRECTORIO_ACTUAL, 'crear_dataset.py')
+        ruta_modelo = os.path.join(DIRECTORIO_ACTUAL, 'entrenar_modelo.py')
+
+        # 2. Construir el comando usando las variables
+        comando = f"python3 {ruta_dataset} && python3 {ruta_modelo}"
+
         subprocess.Popen(comando, shell=True)
         return jsonify({"estatus": "exito", "mensaje": "Generación de dataset y reentrenamiento iniciados."})
     except Exception as e:
