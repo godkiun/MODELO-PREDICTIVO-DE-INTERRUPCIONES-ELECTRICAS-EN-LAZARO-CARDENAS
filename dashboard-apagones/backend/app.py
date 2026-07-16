@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask.cli import load_dotenv
 from flask_cors import CORS
 from flask_caching import Cache
 import requests
@@ -7,7 +8,10 @@ import pandas as pd
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
+from dotenv import load_dotenv
 import subprocess
+
+load_dotenv()  # Carga las variables del archivo .env
 
 app = Flask(__name__)
 CORS(app)
@@ -141,21 +145,24 @@ def obtener_prediccion_actual():
 # ==========================================
 # 3. Endpoints Secretos para Cron Jobs
 # ==========================================
+
+# En tu ruta del cron job:
 @app.route('/api/ejecutar-scraper', methods=['GET'])
 def ejecutar_scraper():
     token = request.args.get('token')
-    if token != 'rona2026':
+    # Lee el token seguro del entorno
+    TOKEN_SECRETO = os.getenv('TOKEN_CRON')
+    
+    if token != TOKEN_SECRETO:
         return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
-    try:
-        subprocess.Popen(["python3", "scraper_colonias.py"])
-        return jsonify({"estatus": "exito", "mensaje": "Barrido de noticias iniciado correctamente."})
-    except Exception as e:
-        return jsonify({"estatus": "error", "mensaje": str(e)}), 500
 
 @app.route('/api/reentrenar-ia', methods=['GET'])
 def reentrenar_ia():
     token = request.args.get('token')
-    if token != 'rona2026':
+    # Lee el token seguro del entorno
+    TOKEN_SECRETO = os.getenv('TOKEN_CRON')
+
+    if token != TOKEN_SECRETO:
         return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
     try:
         comando = "python3 crear_dataset.py && python3 entrenar_modelo.py"
