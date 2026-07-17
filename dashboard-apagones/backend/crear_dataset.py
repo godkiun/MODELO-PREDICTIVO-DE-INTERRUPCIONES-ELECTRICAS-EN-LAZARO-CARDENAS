@@ -9,6 +9,37 @@ def generar_dataset_zonal():
     df_clima = pd.read_sql_query("SELECT * FROM clima", conexion)
     df_reportes = pd.read_sql_query("SELECT * FROM reportes_por_zona", conexion)
     conexion.close()
+
+    # Integrar reportes ciudadanos de crowdsourcing aprobados (Human-in-the-Loop)
+    try:
+        import os
+        dir_actual = os.path.dirname(os.path.abspath(__file__))
+        ruta_db_reportes = os.path.join(dir_actual, 'reportes_apagones.db')
+        
+        if os.path.exists(ruta_db_reportes):
+            conexion_rep = sqlite3.connect(ruta_db_reportes)
+            df_aprobados_raw = pd.read_sql_query("SELECT id, colonia, fecha, hora FROM reportes WHERE estado = 'aprobado'", conexion_rep)
+            
+            if not df_aprobados_raw.empty:
+                # Transformación: Combinar fecha y hora en fecha_reporte
+                df_aprobados = pd.DataFrame()
+                df_aprobados['fecha_reporte'] = df_aprobados_raw['fecha'] + ' ' + df_aprobados_raw['hora']
+                df_aprobados['colonia'] = df_aprobados_raw['colonia']
+                
+                # Fusión: Añadir los reportes aprobados al DataFrame principal de fallas
+                df_reportes = pd.concat([df_reportes, df_aprobados], ignore_index=True)
+                
+                # Limpieza del ciclo: Cambiar estado a 'procesado'
+                cursor_rep = conexion_rep.cursor()
+                ids = df_aprobados_raw['id'].tolist()
+                placeholders = ','.join(['?'] * len(ids))
+                cursor_rep.execute(f"UPDATE reportes SET estado = 'procesado' WHERE id IN ({placeholders})", ids)
+                conexion_rep.commit()
+                print(f"Se integraron {len(df_aprobados_raw)} reportes ciudadanos aprobados y se marcaron como 'procesado'.")
+            
+            conexion_rep.close()
+    except Exception as e:
+        print(f"Advertencia al procesar reportes ciudadanos de crowdsourcing: {e}. Se continuará con el dataset base.")
     
     if df_clima.empty:
         print("Aún no hay datos climáticos suficientes para cruzar.")
