@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 import os
 from dotenv import load_dotenv
 import subprocess
+import sqlite3
 
 load_dotenv()  # Carga las variables del archivo .env
 
@@ -27,6 +28,27 @@ ZONA_LOCAL = ZoneInfo("America/Mexico_City")
 # 1. Cargar el Modelo Predictivo Zonal
 # ==========================================
 DIRECTORIO_ACTUAL = os.path.dirname(os.path.abspath(__file__))
+
+def init_db():
+    ruta_db = os.path.join(DIRECTORIO_ACTUAL, 'reportes_apagones.db')
+    conn = sqlite3.connect(ruta_db)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reportes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            colonia TEXT NOT NULL,
+            fecha TEXT NOT NULL,
+            hora TEXT NOT NULL,
+            estado TEXT DEFAULT 'pendiente',
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Inicializar base de datos
+init_db()
+
 RUTA_MODELO_ZONAL = os.path.join(DIRECTORIO_ACTUAL, 'modelo_apagones_zonas.pkl')
 
 try:
@@ -183,6 +205,50 @@ def reentrenar_ia():
         return jsonify({"estatus": "exito", "mensaje": "Generación de dataset y reentrenamiento iniciados."})
     except Exception as e:
         return jsonify({"estatus": "error", "mensaje": str(e)}), 500
+
+
+# ==========================================
+# 4. Registrar Reporte de Apagón
+# ==========================================
+@app.route('/api/reportar_apagon', methods=['POST'])
+def reportar_apagon():
+    try:
+        datos_reporte = request.json
+        if not datos_reporte:
+            return jsonify({
+                "estatus": "error",
+                "mensaje": "Datos no proporcionados."
+            }), 400
+
+        colonia = datos_reporte.get('colonia')
+        fecha = datos_reporte.get('fecha')
+        hora = datos_reporte.get('hora')
+
+        if not colonia or not fecha or not hora:
+            return jsonify({
+                "estatus": "error",
+                "mensaje": "Faltan datos obligatorios (colonia, fecha, hora)."
+            }), 400
+
+        ruta_db = os.path.join(DIRECTORIO_ACTUAL, 'reportes_apagones.db')
+        conn = sqlite3.connect(ruta_db)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO reportes (colonia, fecha, hora)
+            VALUES (?, ?, ?)
+        ''', (colonia, fecha, hora))
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "estatus": "exito",
+            "mensaje": "Reporte enviado para validación. ¡Gracias por tu aporte!"
+        }), 201
+    except Exception as e:
+        return jsonify({
+            "estatus": "error",
+            "mensaje": f"Error interno del servidor: {str(e)}"
+        }), 500
 
 
 if __name__ == '__main__':

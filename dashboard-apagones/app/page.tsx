@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Thermometer, Droplets, Wind, CloudLightning, MapPin, Building, Activity } from 'lucide-react';
+import { AlertTriangle, Thermometer, Droplets, Wind, CloudLightning, MapPin, Building, Activity, X, CheckCircle } from 'lucide-react';
 
 // 1. Interfaces para tipar la respuesta JSON de Flask
 interface DatosAmbientales {
@@ -23,20 +23,122 @@ export default function Dashboard() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coloniaSeleccionada, setColoniaSeleccionada] = useState<string>('Fideicomiso (cerca del ITLAC)');
+  const [usandoRespaldo, setUsandoRespaldo] = useState<boolean>(false);
+
+  // Estados para funcionalidad de Crowdsourcing / Reporte Manual
+  const [modalAbierto, setModalAbierto] = useState<boolean>(false);
+  const [coloniaReporte, setColoniaReporte] = useState<string>('11 de julio');
+  const [fechaReporte, setFechaReporte] = useState<string>('');
+  const [horaReporte, setHoraReporte] = useState<string>('');
+  const [enviando, setEnviando] = useState<boolean>(false);
+  const [errorReporte, setErrorReporte] = useState<string | null>(null);
+  const [mostrarExito, setMostrarExito] = useState<boolean>(false);
+
+  // Inicializar la fecha actual al abrir el modal
+  useEffect(() => {
+    if (modalAbierto) {
+      const hoy = new Date();
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+      const dd = String(hoy.getDate()).padStart(2, '0');
+      setFechaReporte(`${yyyy}-${mm}-${dd}`);
+      setColoniaReporte('11 de julio');
+      setHoraReporte('');
+      setErrorReporte(null);
+    }
+  }, [modalAbierto]);
+
+  const manejarEnvio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!coloniaReporte || !fechaReporte || !horaReporte) {
+      setErrorReporte('Por favor, completa todos los campos.');
+      return;
+    }
+    setEnviando(true);
+    setErrorReporte(null);
+
+    try {
+      const respuesta = await fetch('https://ronadev.pythonanywhere.com/api/reportar_apagon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          colonia: coloniaReporte,
+          fecha: fechaReporte,
+          hora: horaReporte,
+        }),
+      });
+
+      if (!respuesta.ok) {
+        throw new Error('No se pudo enviar el reporte. Servidor no disponible.');
+      }
+
+      setModalAbierto(false);
+      setMostrarExito(true);
+
+      // Ocultar banner de éxito después de 6 segundos
+      setTimeout(() => {
+        setMostrarExito(false);
+      }, 6000);
+
+    } catch (err: any) {
+      setErrorReporte(err.message || 'Ocurrió un error inesperado al enviar el reporte.');
+    } finally {
+      setEnviando(false);
+    }
+  };
 
   useEffect(() => {
     const obtenerPrediccion = async () => {
-      try {
-        const respuesta = await fetch('https://ronadev.pythonanywhere.com/api/prediccion_actual');
-        if (!respuesta.ok) throw new Error('Error al conectar con el servidor Flask');
-        
-        const data: DatosPrediccion = await respuesta.json();
-        setDatos(data);
-      } catch (err: any) {
-        setError(err.message || 'Ocurrió un error inesperado');
-      } finally {
-        setCargando(false);
+      const reintentosMax = 3;
+      const tiemposEspera = [0, 2000, 3000]; // 0ms para el primer intento, 2000ms para el segundo, 3000ms para el tercero
+      let exito = false;
+      let ultimoError: any = null;
+
+      for (let intento = 0; intento < reintentosMax; intento++) {
+        try {
+          if (intento > 0) {
+            // Esperar el tiempo progresivo antes del siguiente reintento
+            await new Promise((resolve) => setTimeout(resolve, tiemposEspera[intento]));
+          }
+          const respuesta = await fetch('https://ronadev.pythonanywhere.com/api/prediccion_actual');
+          if (!respuesta.ok) throw new Error('Error al conectar con el servidor Flask');
+          
+          const data: DatosPrediccion = await respuesta.json();
+          
+          // Caché Silencioso: guardar la respuesta en localStorage
+          localStorage.setItem('cache_apagones_lc', JSON.stringify(data));
+          
+          setDatos(data);
+          setUsandoRespaldo(false);
+          setError(null);
+          exito = true;
+          break; // Salir del bucle si fue exitoso
+        } catch (err: any) {
+          ultimoError = err;
+          // Continuar al siguiente intento
+        }
       }
+
+      if (!exito) {
+        // Fallback Offline: Si fallaron todos los intentos, usar caché
+        const datosCache = localStorage.getItem('cache_apagones_lc');
+        if (datosCache) {
+          try {
+            const data: DatosPrediccion = JSON.parse(datosCache);
+            setDatos(data);
+            setUsandoRespaldo(true);
+            setError(null); // No mostramos pantalla de error fatal, ya que tenemos respaldo
+          } catch (e) {
+            setError('Error al conectar con el servidor y el caché está corrupto.');
+          }
+        } else {
+          setError(ultimoError?.message || 'Error al conectar con el servidor y no hay datos en caché');
+        }
+      }
+      
+      setCargando(false);
     };
 
     obtenerPrediccion();
@@ -88,6 +190,33 @@ export default function Dashboard() {
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900 text-white p-6 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
         
+        {usandoRespaldo && (
+          <div className="bg-yellow-400 text-slate-950 p-4 rounded-xl font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-lg border border-yellow-500/50">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <span>Conexión inestable. Mostrando el último análisis disponible.</span>
+            </div>
+            <span className="text-xs bg-slate-900/10 px-2 py-1 rounded">
+              Lectura del: {datos.fecha_consulta}
+            </span>
+          </div>
+        )}
+
+        {mostrarExito && (
+          <div className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-450 p-4 rounded-xl font-medium flex items-center justify-between gap-3 shadow-lg animate-pulse">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+              <span>Reporte enviado para validación. ¡Gracias por tu aporte!</span>
+            </div>
+            <button 
+              onClick={() => setMostrarExito(false)}
+              className="text-emerald-400/60 hover:text-emerald-400 font-bold px-2 py-1 rounded hover:bg-emerald-500/10 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Cabecera Principal */}
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-800 pb-6 gap-4">
           <div>
@@ -99,6 +228,15 @@ export default function Dashboard() {
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
               Lázaro Cárdenas, Michoacán | Actualizado: {datos.fecha_consulta}
             </p>
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <button
+              onClick={() => setModalAbierto(true)}
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-teal-400 text-teal-400 bg-transparent hover:bg-teal-400/10 hover:shadow-[0_0_15px_rgba(45,212,191,0.4)] transition-all duration-300 font-semibold cursor-pointer text-sm tracking-wide"
+            >
+              <AlertTriangle className="w-4 h-4 text-teal-400" />
+              Reportar Apagón
+            </button>
           </div>
         </header>
 
@@ -122,7 +260,7 @@ export default function Dashboard() {
                 {datos.probabilidad_apagon_porcentaje}%
               </div>
               <p className="text-slate-400 text-xs mt-3 max-w-sm mx-auto">
-                Promedio municipal ponderado por stress térmico de transformadores.
+                Promedio municipal ponderado por estres térmico de transformadores.
               </p>
             </div>
             <div className="h-2 w-full bg-slate-850 rounded-full overflow-hidden">
@@ -222,6 +360,27 @@ export default function Dashboard() {
 
         </div>
 
+        {/* Sección de Participación Ciudadana (Human-in-the-loop) */}
+        <div className="bg-slate-900/55 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-slate-800/80 hover:border-slate-700/50 transition-all duration-300 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-teal-500/10 rounded-xl text-teal-400 border border-teal-500/20">
+              <Activity className="w-8 h-8 text-teal-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-200">Participación Ciudadana</h3>
+              <p className="text-slate-400 text-sm mt-1 max-w-2xl">
+                Ayuda a mejorar los modelos predictivos reportando interrupciones eléctricas en tu zona. Nuestro sistema "Human-in-the-Loop" procesa y valida cada reporte en tiempo real.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setModalAbierto(true)}
+            className="w-full md:w-auto shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-teal-400 text-teal-400 hover:text-teal-300 hover:border-teal-300 hover:bg-teal-950/40 hover:shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all duration-300 font-bold cursor-pointer text-sm tracking-wide"
+          >
+            Reportar Apagón Manual
+          </button>
+        </div>
+
         {/* Tabla Comparativa de Zonas */}
         <div className="bg-slate-900/60 rounded-2xl p-6 shadow-xl border border-slate-800/80">
           <div className="flex items-center gap-2 mb-6">
@@ -248,7 +407,7 @@ export default function Dashboard() {
                       {colName}
                     </span>
                     <span className="text-[10px] text-slate-400 uppercase tracking-wide">
-                      {colName.includes('ITLAC') ? 'Cerca de tu campus' : 'Sector Municipal'}
+                      Sector Municipal
                     </span>
                   </div>
                   
@@ -263,6 +422,145 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* Modal de Reporte */}
+      {modalAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            
+            {/* Encabezado del Modal */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-teal-400">
+                <AlertTriangle className="w-5 h-5 text-teal-400" />
+                Reportar Apagón Manual
+              </h3>
+              <button
+                onClick={() => setModalAbierto(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                disabled={enviando}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Formulario */}
+            <form onSubmit={manejarEnvio} className="p-6 space-y-6">
+              
+              {errorReporte && (
+                <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 p-3 rounded-lg text-sm flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-450" />
+                  <span>{errorReporte}</span>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-400">
+                Ingresa los detalles del apagón en tu colonia. La información será validada e integrada a nuestro algoritmo predictivo.
+              </p>
+
+              {/* Campo: Colonia */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                  Colonia / Sector
+                </label>
+                <div className="relative">
+                  <select
+                    value={coloniaReporte}
+                    onChange={(e) => setColoniaReporte(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer appearance-none"
+                    disabled={enviando}
+                  >
+                    {[
+                      "11 de julio",
+                      "centro",
+                      "las guacamayas",
+                      "la mira",
+                      "playa azul",
+                      "fideicomiso",
+                      "campamento",
+                      "pie de casa",
+                      "las truchas",
+                      "primer sector",
+                      "segundo sector",
+                      "tercer sector",
+                      "lotes y servicios",
+                      "corregidora",
+                      "la orillita",
+                      "buenos aires"
+                    ].map((col) => (
+                      <option key={col} value={col}>
+                        {col}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                    ▼
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Campo: Fecha */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                    Fecha
+                  </label>
+                  <input
+                    type="date"
+                    value={fechaReporte}
+                    onChange={(e) => setFechaReporte(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer"
+                    disabled={enviando}
+                  />
+                </div>
+
+                {/* Campo: Hora */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                    Hora <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={horaReporte}
+                    onChange={(e) => setHoraReporte(e.target.value)}
+                    required
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 cursor-pointer"
+                    disabled={enviando}
+                  />
+                </div>
+              </div>
+
+              {/* Botones de acción del Modal */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setModalAbierto(false)}
+                  className="px-4 py-2 text-sm text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+                  disabled={enviando}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 text-sm font-bold bg-teal-400 hover:bg-teal-300 text-slate-950 rounded-xl hover:shadow-[0_0_15px_rgba(45,212,191,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center gap-2"
+                  disabled={enviando}
+                >
+                  {enviando ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+                      Enviando...
+                    </>
+                  ) : (
+                    'Enviar Reporte'
+                  )}
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }
