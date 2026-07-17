@@ -196,7 +196,7 @@ def reentrenar_ia():
     try:
         # 1. Crear rutas absolutas a ambos archivos
         ruta_dataset = os.path.join(DIRECTORIO_ACTUAL, 'crear_dataset.py')
-        ruta_modelo = os.path.join(DIRECTORIO_ACTUAL, 'entrenar_modelo.py')
+        ruta_modelo = os.path.join(DIRECTORIO_ACTUAL, 'entrenar_modelo_zonal.py')
 
         # 2. Construir el comando usando las variables
         comando = f"python3 {ruta_dataset} && python3 {ruta_modelo}"

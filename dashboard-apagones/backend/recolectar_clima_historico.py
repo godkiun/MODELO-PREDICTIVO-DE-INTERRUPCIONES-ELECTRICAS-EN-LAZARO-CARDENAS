@@ -49,7 +49,10 @@ def descargar_clima_historico():
         print(f"Descargados {total_registros} registros de clima históricos.")
         
         # 2. Conectar a la base de datos
-        conexion = sqlite3.connect("apagones_lc.db")
+        import os
+        dir_actual = os.path.dirname(os.path.abspath(__file__))
+        ruta_db = os.path.join(dir_actual, "apagones_lc.db")
+        conexion = sqlite3.connect(ruta_db)
         cursor = conexion.cursor()
         
         # Crear la tabla de clima si no existe

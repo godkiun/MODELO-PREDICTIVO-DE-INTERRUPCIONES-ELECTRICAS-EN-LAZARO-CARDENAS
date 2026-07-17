@@ -14,7 +14,10 @@ URL = f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&cu
 # 2. Inicialización de Base de Datos SQLite
 # ==========================================
 def inicializar_db():
-    conexion = sqlite3.connect("apagones_lc.db")
+    import os
+    dir_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_db = os.path.join(dir_actual, "apagones_lc.db")
+    conexion = sqlite3.connect(ruta_db)
     cursor = conexion.cursor()
     
     # Cambiamos "descripcion" por "codigo_clima" para facilitar el modelo predictivo

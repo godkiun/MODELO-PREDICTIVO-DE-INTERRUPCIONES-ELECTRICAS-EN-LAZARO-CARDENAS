@@ -3,7 +3,10 @@ import pandas as pd
 
 def generar_dataset_zonal():
     print("Conectando a la base de datos para estructurar zonas...")
-    conexion = sqlite3.connect("apagones_lc.db")
+    import os
+    dir_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_db_clima = os.path.join(dir_actual, "apagones_lc.db")
+    conexion = sqlite3.connect(ruta_db_clima)
     
     # Leemos la tabla de clima y la nueva tabla de reportes por zona
     df_clima = pd.read_sql_query("SELECT * FROM clima", conexion)
@@ -90,10 +93,11 @@ def generar_dataset_zonal():
         'velocidad_viento', 'codigo_clima', 'colonia', 'hubo_apagon'
     ]]
     
-    dataset_final.to_csv("dataset_apagones_zonas.csv", index=False)
+    ruta_csv = os.path.join(dir_actual, "dataset_apagones_zonas.csv")
+    dataset_final.to_csv(ruta_csv, index=False)
     
     print("\n--- RESUMEN DEL DATASET ZONAL ---")
-    print(f"Archivo guardado: 'dataset_apagones_zonas.csv'")
+    print(f"Archivo guardado: '{ruta_csv}'")
     print(f"Total de registros generados (Horas x Colonias): {len(dataset_final)}")
     print(f"Apagones mapeados correctamente: {dataset_final['hubo_apagon'].sum()}")
 

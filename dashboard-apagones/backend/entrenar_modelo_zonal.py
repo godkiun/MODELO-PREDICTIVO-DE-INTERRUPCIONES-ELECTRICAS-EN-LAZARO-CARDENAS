@@ -15,12 +15,15 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 def entrenar_modelo_zonal():
     print("Cargando dataset zonal de apagones...")
+    import os
+    dir_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_csv = os.path.join(dir_actual, "dataset_apagones_zonas.csv")
     
     # 1. Cargar los datos
     try:
-        df = pd.read_csv("dataset_apagones_zonas.csv")
+        df = pd.read_csv(ruta_csv)
     except FileNotFoundError:
-        print("Error: No se encontró 'dataset_apagones_zonas.csv'. Corre 'crear_dataset.py' primero.")
+        print(f"Error: No se encontró '{ruta_csv}'. Corre 'crear_dataset.py' primero.")
         return
 
     print(f"Total de registros cargados: {len(df)}")
@@ -70,8 +73,9 @@ def entrenar_modelo_zonal():
         'columnas': columnas_features
     }
     
-    joblib.dump(paquete_modelo, 'modelo_apagones_zonas.pkl')
-    print("\nModelo zonal guardado exitosamente como 'modelo_apagones_zonas.pkl'. ¡Listo para producción!")
+    ruta_modelo = os.path.join(dir_actual, 'modelo_apagones_zonas.pkl')
+    joblib.dump(paquete_modelo, RUTA_MODELO_ZONAL if 'RUTA_MODELO_ZONAL' in globals() else ruta_modelo)
+    print(f"\nModelo zonal guardado exitosamente. ¡Listo para producción!")
 
 if __name__ == "__main__":
     entrenar_modelo_zonal()

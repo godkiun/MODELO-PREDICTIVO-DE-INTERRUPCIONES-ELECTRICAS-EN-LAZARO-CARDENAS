@@ -16,7 +16,10 @@ RSS_URL = f"https://news.google.com/rss/search?q={url_codificada}&hl=es-419&gl=M
 # 2. Inicialización de Base de Datos SQLite
 # ==========================================
 def inicializar_db():
-    conexion = sqlite3.connect("apagones_lc.db")
+    import os
+    dir_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_db = os.path.join(dir_actual, "apagones_lc.db")
+    conexion = sqlite3.connect(ruta_db)
     cursor = conexion.cursor()
     
     # Creamos una tabla nueva exclusiva para nuestra variable objetivo (los apagones)
