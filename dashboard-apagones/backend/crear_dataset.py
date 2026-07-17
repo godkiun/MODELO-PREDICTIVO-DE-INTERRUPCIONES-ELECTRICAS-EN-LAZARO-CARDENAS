@@ -65,19 +65,24 @@ def generar_dataset_zonal():
     df_expandido = pd.merge(df_clima, df_colonias, on='temp_key').drop('temp_key', axis=1)
     df_expandido['hubo_apagon'] = 0
     
-    # 4. Inyectar las fallas reales
+    # 4. Inyectar las fallas reales mediante merge (evitando loops y errores de NumPy)
     if not df_reportes.empty:
-        # Cambia tu línea actual por esta versión más inteligente
         df_reportes['fecha_reporte'] = pd.to_datetime(df_reportes['fecha_reporte'], format='mixed')
         df_reportes['hora_llave'] = df_reportes['fecha_reporte'].dt.round('h')
         df_reportes['colonia'] = df_reportes['colonia'].str.lower()
         
+        # Crear un DataFrame temporal con las combinaciones únicas de apagones
+        df_eventos = df_reportes[['hora_llave', 'colonia']].drop_duplicates()
+        df_eventos['hubo_apagon_temp'] = 1
+        
         # Cruzamos ambos dataframes para marcar con un "1" donde coincida hora y colonia
-        for _, reporte in df_reportes.iterrows():
-            mascara = (df_expandido['hora_llave'] == reporte['hora_llave']) & \
-                      (df_expandido['colonia'] == reporte['colonia'])
-            # Convertimos la máscara a valores booleanos explícitos para evitar el error de NumPy
-            df_expandido.loc[mascara.astype(bool), 'hubo_apagon'] = 1
+        df_expandido = pd.merge(df_expandido, df_eventos, on=['hora_llave', 'colonia'], how='left')
+        
+        # Rellenar los valores vacíos con 0 y convertir a tipo entero
+        df_expandido['hubo_apagon'] = df_expandido['hubo_apagon_temp'].fillna(0).astype(int)
+        
+        # Eliminar columna temporal de cruce
+        df_expandido = df_expandido.drop('hubo_apagon_temp', axis=1)
 
     # 5. Limpieza y exportación
     dataset_final = df_expandido[[
