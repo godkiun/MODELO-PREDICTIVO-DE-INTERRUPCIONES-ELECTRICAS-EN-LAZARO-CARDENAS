@@ -67,7 +67,8 @@ def generar_dataset_zonal():
     
     # 4. Inyectar las fallas reales
     if not df_reportes.empty:
-        df_reportes['fecha_reporte'] = pd.to_datetime(df_reportes['fecha_reporte'])
+        # Cambia tu línea actual por esta versión más inteligente
+        df_reportes['fecha_reporte'] = pd.to_datetime(df_reportes['fecha_reporte'], format='mixed')
         df_reportes['hora_llave'] = df_reportes['fecha_reporte'].dt.round('h')
         df_reportes['colonia'] = df_reportes['colonia'].str.lower()
         
@@ -75,7 +76,8 @@ def generar_dataset_zonal():
         for _, reporte in df_reportes.iterrows():
             mascara = (df_expandido['hora_llave'] == reporte['hora_llave']) & \
                       (df_expandido['colonia'] == reporte['colonia'])
-            df_expandido.loc[mascara, 'hubo_apagon'] = 1
+            # Convertimos la máscara a valores booleanos explícitos para evitar el error de NumPy
+            df_expandido.loc[mascara.astype(bool), 'hubo_apagon'] = 1
 
     # 5. Limpieza y exportación
     dataset_final = df_expandido[[
