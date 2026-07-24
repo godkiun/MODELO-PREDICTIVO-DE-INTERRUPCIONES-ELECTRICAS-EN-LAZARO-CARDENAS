@@ -1,0 +1,58 @@
+name: CI/CD Pipeline - Despliegue de Modelo Predictivo
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Motivo de la ejecución manual'
+        required: false
+        default: 'Ejecución manual desde MCP Server'
+
+jobs:
+  backend-check:
+    name: Verificar y Validar Backend (Python / Flask)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Instalar dependencias del backend
+        run: |
+          if [ -f backend/requirements.txt ]; then
+            pip install -r backend/requirements.txt
+          fi
+
+      - name: Validar sintaxis de código en backend
+        run: |
+          python -m compileall backend/
+
+  frontend-check:
+    name: Verificar y Construir Frontend (Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias y verificar frontend
+        run: |
+          if [ -d frontend ]; then
+            cd frontend
+            if [ -f package.json ]; then
+              npm ci || npm install
+              npm run build --if-present
+            fi
+          fi
