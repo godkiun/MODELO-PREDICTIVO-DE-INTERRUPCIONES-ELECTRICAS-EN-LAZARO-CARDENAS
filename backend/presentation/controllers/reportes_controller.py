@@ -32,6 +32,65 @@ def reportar_apagon():
     except Exception as e:
         return jsonify({"estatus": "error", "mensaje": f"Error interno del servidor: {str(e)}"}), 500
 
+@reportes_bp.route('/api/admin/verificar-token', methods=['POST'])
+def verificar_admin_token():
+    datos = request.json or {}
+    token = datos.get('token')
+    TOKEN_SECRETO = os.getenv('TOKEN_CRON')
+    
+    if not token or token != TOKEN_SECRETO:
+        return jsonify({"estatus": "error", "mensaje": "Token de administrador inválido."}), 401
+    
+    return jsonify({"estatus": "exito", "mensaje": "Token válido.", "valido": True}), 200
+
+
+@reportes_bp.route('/api/admin/pendientes', methods=['POST'])
+def obtener_pendientes_json():
+    datos = request.json or {}
+    token = datos.get('token')
+    TOKEN_SECRETO = os.getenv('TOKEN_CRON')
+
+    if not token or token != TOKEN_SECRETO:
+        return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
+
+    try:
+        reportes_obj = repo.obtener_pendientes()
+        reportes = [
+            {
+                "id": r.id,
+                "colonia": r.colonia,
+                "fecha": r.fecha,
+                "hora": r.hora,
+                "estado": r.estado,
+                "fecha_creacion": r.fecha_creacion
+            }
+            for r in reportes_obj
+        ]
+        return jsonify({"estatus": "exito", "reportes": reportes}), 200
+    except Exception as e:
+        return jsonify({"estatus": "error", "mensaje": str(e)}), 500
+
+
+@reportes_bp.route('/api/admin/aprobar', methods=['POST'])
+def aprobar_reporte_json():
+    datos = request.json or {}
+    token = datos.get('token')
+    reporte_id = datos.get('id')
+    TOKEN_SECRETO = os.getenv('TOKEN_CRON')
+
+    if not token or token != TOKEN_SECRETO:
+        return jsonify({"estatus": "error", "mensaje": "Acceso denegado"}), 403
+
+    if not reporte_id:
+        return jsonify({"estatus": "error", "mensaje": "Falta el ID del reporte."}), 400
+
+    try:
+        exito = repo.aprobar_reporte(int(reporte_id))
+        if not exito:
+            return jsonify({"estatus": "error", "mensaje": "Reporte no encontrado."}), 404
+        return jsonify({"estatus": "exito", "mensaje": f"Reporte #{reporte_id} aprobado con éxito."}), 200
+    except Exception as e:
+        return jsonify({"estatus": "error", "mensaje": str(e)}), 500
 
 @reportes_bp.route('/api/admin-reportes', methods=['GET'])
 def admin_reportes():

@@ -9,3 +9,4 @@ export * from './TarjetasClima';
 export * from './ParticipacionCiudadanaCard';
 export * from './TablaComparativaZonas';
 export * from './ReporteModal';
+export * from './AdminModal';

@@ -14,6 +14,7 @@ import {
   ParticipacionCiudadanaCard,
   TablaComparativaZonas,
   ReporteModal,
+  AdminModal,
 } from '@/presentation/components';
 
 export const DashboardPage: React.FC = () => {
@@ -24,8 +25,9 @@ export const DashboardPage: React.FC = () => {
     useState<string>('Fideicomiso (cerca del ITLAC)');
   const [usandoRespaldo, setUsandoRespaldo] = useState<boolean>(false);
 
-  // Estados para Modal y Notificaciones
+  // Estados para Modales y Notificaciones
   const [modalAbierto, setModalAbierto] = useState<boolean>(false);
+  const [adminModalAbierto, setAdminModalAbierto] = useState<boolean>(false);
   const [mostrarExito, setMostrarExito] = useState<boolean>(false);
 
   const cargarDatos = useCallback(async () => {
@@ -75,6 +77,7 @@ export const DashboardPage: React.FC = () => {
         <Header
           fechaConsulta={datos.fecha_consulta}
           onAbrirModal={() => setModalAbierto(true)}
+          onAbrirAdmin={() => setAdminModalAbierto(true)}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -102,9 +105,13 @@ export const DashboardPage: React.FC = () => {
         onCerrar={() => setModalAbierto(false)}
         onExito={manejarExitoReporte}
       />
+
+      <AdminModal
+        modalAbierto={adminModalAbierto}
+        onCerrar={() => setAdminModalAbierto(false)}
+      />
     </main>
   );
 };
 
 export default DashboardPage;
-

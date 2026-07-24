@@ -19,12 +19,12 @@ export async function triggerVercelDeploy(target: 'production' | 'preview' = 'pr
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      name: projectId,
+      name: 'monitor-lazarocardenas',
       target: target,
       gitSource: owner && repo ? {
         type: 'github',
         repo: `${owner}/${repo}`,
-        ref: 'main'
+        ref: 'master'
       } : undefined
     })
   });
