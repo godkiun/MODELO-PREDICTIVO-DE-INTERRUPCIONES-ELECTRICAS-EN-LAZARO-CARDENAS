@@ -3,9 +3,15 @@ import sys
 from flask import Flask
 from flask_cors import CORS
 from flask_caching import Cache
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
+
+# Importación condicional segura de Flask-Limiter
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    HAS_LIMITER = True
+except ImportError:
+    HAS_LIMITER = False
 
 # Asegurar que el directorio de backend esté en sys.path para importaciones de Clean Architecture
 DIRECTORIO_ACTUAL = os.path.dirname(os.path.abspath(__file__))
@@ -22,13 +28,14 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# 🔒 CONFIGURACIÓN DE RATE LIMITING (Protección contra DoS y abuso de API)
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["200 per day", "60 per hour"],
-    storage_uri="memory://"
-)
+# 🔒 CONFIGURACIÓN DE RATE LIMITING (Protección contra DoS si el paquete está disponible)
+if HAS_LIMITER:
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["200 per day", "60 per hour"],
+        storage_uri="memory://"
+    )
 
 # 🚀 CONFIGURACIÓN DE CACHÉ
 cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 900})
@@ -43,5 +50,5 @@ app.register_blueprint(reportes_bp)
 app.register_blueprint(cron_bp)
 
 if __name__ == '__main__':
-    print("Iniciando Servidor API de Backend con Rate Limiting y Protección Activa en el puerto 5000...")
+    print("Iniciando Servidor API de Backend con Protección Activa en el puerto 5000...")
     app.run(debug=True, port=5000)
