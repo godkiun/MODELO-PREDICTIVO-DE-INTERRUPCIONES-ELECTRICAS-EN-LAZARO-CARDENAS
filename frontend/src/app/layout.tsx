@@ -15,6 +15,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Voltlyzer LC - Sistema de Monitoreo Predictivo de Red Eléctrica",
   description: "Monitoreo y predicción en tiempo real del riesgo de fallas e interrupciones eléctricas por colonia en Lázaro Cárdenas, Michoacán.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: "/LOGO_VOLTLYZER_LC.png", type: "image/png" },
+    ],
+    shortcut: "/icon.png",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     title: "Voltlyzer LC - Monitoreo Predictivo de Red Eléctrica",
     description: "Predicción en tiempo real del riesgo de fallas e interrupciones eléctricas por colonia en Lázaro Cárdenas, Michoacán.",
@@ -22,7 +30,7 @@ export const metadata: Metadata = {
     siteName: "Voltlyzer LC",
     images: [
       {
-        url: "https://voltlyzer-lc.vercel.app/LOGO_VOLTLYZER.png",
+        url: "https://voltlyzer-lc.vercel.app/LOGO_VOLTLYZER_LC.png",
         width: 1200,
         height: 630,
         alt: "Voltlyzer LC Logo y Vista Previa Social",
@@ -35,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Voltlyzer LC - Monitoreo Predictivo de Red Eléctrica",
     description: "Predicción en tiempo real del riesgo de fallas eléctricas por colonia en Lázaro Cárdenas, Mich.",
-    images: ["https://voltlyzer-lc.vercel.app/LOGO_VOLTLYZER.png"],
+    images: ["https://voltlyzer-lc.vercel.app/LOGO_VOLTLYZER_LC.png"],
   },
 };
 

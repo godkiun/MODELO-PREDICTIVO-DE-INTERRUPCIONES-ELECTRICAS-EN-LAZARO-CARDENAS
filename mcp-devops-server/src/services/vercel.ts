@@ -2,11 +2,30 @@ export async function triggerVercelDeploy(target: 'production' | 'preview' = 'pr
   const token = process.env.VERCEL_TOKEN;
   const projectId = process.env.VERCEL_PROJECT_ID;
   const teamId = process.env.VERCEL_TEAM_ID;
-  const owner = process.env.GITHUB_OWNER;
-  const repo = process.env.GITHUB_REPO;
 
   if (!token || !projectId) {
     throw new Error("Faltan variables de entorno para Vercel (VERCEL_TOKEN, VERCEL_PROJECT_ID).");
+  }
+
+  let gitSource: any = undefined;
+  try {
+    let projUrl = `https://api.vercel.com/v9/projects/${projectId}`;
+    if (teamId) projUrl += `?teamId=${teamId}`;
+    const projRes = await fetch(projUrl, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (projRes.ok) {
+      const projData = await projRes.json();
+      if (projData.link && projData.link.repoId) {
+        gitSource = {
+          type: 'github',
+          repoId: projData.link.repoId,
+          ref: projData.link.productionBranch || 'main'
+        };
+      }
+    }
+  } catch (e) {
+    // Ignore error fetching project link details
   }
 
   let url = `https://api.vercel.com/v13/deployments`;
@@ -19,13 +38,9 @@ export async function triggerVercelDeploy(target: 'production' | 'preview' = 'pr
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      name: 'monitor-lazarocardenas',
+      name: 'voltlyzer-lc',
       target: target,
-      gitSource: owner && repo ? {
-        type: 'github',
-        repo: `${owner}/${repo}`,
-        ref: 'master'
-      } : undefined
+      gitSource: gitSource
     })
   });
 
