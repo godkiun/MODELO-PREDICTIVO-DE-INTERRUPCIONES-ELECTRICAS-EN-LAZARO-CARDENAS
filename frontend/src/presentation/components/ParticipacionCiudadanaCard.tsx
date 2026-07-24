@@ -9,24 +9,23 @@ export const ParticipacionCiudadanaCard: React.FC<ParticipacionCiudadanaCardProp
   onAbrirModal,
 }) => {
   return (
-    <div className="bg-slate-900/55 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-slate-800/80 hover:border-slate-700/50 transition-all duration-300 flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="bg-[#16181D] rounded-2xl p-6 shadow-xl border border-[#262930] hover:border-[#383C46] transition-all duration-300 flex flex-col md:flex-row items-center justify-between gap-6">
       <div className="flex items-start gap-4">
-        <div className="p-3 bg-teal-500/10 rounded-xl text-teal-400 border border-teal-500/20">
-          <Activity className="w-8 h-8 text-teal-400" />
+        <div className="p-3 bg-[#FFE600]/10 rounded-xl text-[#FFE600] border border-[#FFE600]/20">
+          <Activity className="w-8 h-8 text-[#FFE600]" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-slate-200">Participación Ciudadana</h3>
-          <p className="text-slate-400 text-sm mt-1 max-w-2xl">
-            Ayuda a mejorar los modelos predictivos reportando interrupciones eléctricas en tu
-            zona. Nuestro sistema "Human-in-the-Loop" procesa y valida cada reporte en tiempo real.
+          <h3 className="text-lg font-bold text-white">Participación Ciudadana</h3>
+          <p className="text-[#9EA3B0] text-sm mt-1 max-w-2xl">
+            Ayuda a mejorar los modelos predictivos de <strong className="text-white">Voltlyzer LC</strong> reportando interrupciones eléctricas en tu zona. Nuestro sistema procesa y valida cada reporte en tiempo real.
           </p>
         </div>
       </div>
       <button
         onClick={onAbrirModal}
-        className="w-full md:w-auto shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-teal-400 text-teal-400 hover:text-teal-300 hover:border-teal-300 hover:bg-teal-950/40 hover:shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all duration-300 font-bold cursor-pointer text-sm tracking-wide"
+        className="w-full md:w-auto shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FFE600] text-[#0D0E11] hover:bg-[#ffe81a] hover:shadow-[0_0_20px_rgba(255,230,0,0.4)] transition-all duration-300 font-extrabold cursor-pointer text-sm tracking-wide active:scale-95"
       >
-        Reportar Apagón Manual
+        Enviar Reporte de Falla
       </button>
     </div>
   );

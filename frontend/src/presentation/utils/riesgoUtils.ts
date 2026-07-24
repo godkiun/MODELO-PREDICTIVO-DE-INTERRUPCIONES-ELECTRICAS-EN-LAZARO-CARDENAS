@@ -1,30 +1,40 @@
 export interface SemaforoBadge {
   texto: string;
   color: string;
+  hex: string;
+}
+
+export function obtenerColorHexRiesgo(probabilidad: number): string {
+  if (probabilidad < 30) return '#FFF8B3'; // Riesgo Bajo: Amarillo suave / crema
+  if (probabilidad <= 60) return '#FFE600'; // Riesgo Medio: Amarillo neón brillante
+  return '#FF9100'; // Riesgo Alto: Ámbar / Naranja eléctrico
 }
 
 export function obtenerColorRiesgo(probabilidad: number): string {
-  if (probabilidad < 20) return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
-  if (probabilidad < 50) return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-  return 'text-rose-500 bg-rose-500/10 border-rose-500/30';
+  if (probabilidad < 30) return 'text-[#FFF8B3] bg-[#FFF8B3]/10 border-[#FFF8B3]/30';
+  if (probabilidad <= 60) return 'text-[#FFE600] bg-[#FFE600]/10 border-[#FFE600]/30';
+  return 'text-[#FF9100] bg-[#FF9100]/10 border-[#FF9100]/30';
 }
 
 export function obtenerSemaforoBadge(probabilidad: number): SemaforoBadge {
-  if (probabilidad < 20) {
+  if (probabilidad < 30) {
     return {
       texto: 'Riesgo Bajo',
-      color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      color: 'bg-[#FFF8B3]/10 text-[#FFF8B3] border-[#FFF8B3]/30',
+      hex: '#FFF8B3',
     };
   }
-  if (probabilidad < 50) {
+  if (probabilidad <= 60) {
     return {
       texto: 'Riesgo Medio',
-      color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      color: 'bg-[#FFE600]/10 text-[#FFE600] border-[#FFE600]/30',
+      hex: '#FFE600',
     };
   }
   return {
     texto: 'Riesgo Alto',
-    color: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+    color: 'bg-[#FF9100]/10 text-[#FF9100] border-[#FF9100]/30',
+    hex: '#FF9100',
   };
 }
 

@@ -68,7 +68,7 @@ export const DashboardPage: React.FC = () => {
   if (!datos) return null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900 text-white p-6 md:p-8 font-sans">
+    <main className="min-h-screen bg-[#0D0E11] text-white p-6 md:p-8 font-sans selection:bg-[#FFE600] selection:text-[#0D0E11]">
       <div className="max-w-6xl mx-auto space-y-8">
         {usandoRespaldo && <BannerRespaldo fechaConsulta={datos.fecha_consulta} />}
 

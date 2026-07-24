@@ -103,26 +103,26 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-[#16181D] border border-[#262930] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header del Modal */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/40">
+        <div className="flex items-center justify-between p-5 border-b border-[#262930] bg-[#0D0E11]/40">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20">
-              <Shield className="w-5 h-5" />
+            <div className="p-2 rounded-xl bg-[#FFE600]/10 text-[#FFE600] border border-[#FFE600]/20">
+              <Shield className="w-5 h-5 text-[#FFE600]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 Panel de Administración
               </h2>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-[#9EA3B0] font-medium">
                 {tokenActivo ? 'Moderación de reportes de la comunidad' : 'Acceso restringido'}
               </p>
             </div>
           </div>
           <button
             onClick={onCerrar}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-[#9EA3B0] hover:text-white hover:bg-[#262930] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -134,24 +134,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
             /* Vista de Formulario de Contraseña/Token */
             <form onSubmit={manejarLogin} className="space-y-5 max-w-md mx-auto py-4">
               <div className="text-center space-y-2">
-                <div className="inline-flex p-3 rounded-full bg-slate-800/80 text-teal-400 mb-2 border border-slate-700">
+                <div className="inline-flex p-3 rounded-full bg-[#0D0E11] text-[#FFE600] mb-2 border border-[#262930]">
                   <Lock className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-semibold text-slate-200">Autenticación Requerida</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-base font-semibold text-white">Autenticación Requerida</h3>
+                <p className="text-xs text-[#9EA3B0]">
                   Ingresa tu clave de administrador para acceder a la moderación.
                 </p>
               </div>
 
               {errorAuth && (
-                <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                   <span>{errorAuth}</span>
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-300">
+                <label className="block text-xs font-semibold text-[#9EA3B0]">
                   Token o Contraseña Admin
                 </label>
                 <input
@@ -159,7 +159,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
                   value={tokenInput}
                   onChange={(e) => setTokenInput(e.target.value)}
                   placeholder="••••••••••••••••"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:border-teal-500 transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0D0E11] border border-[#262930] text-white text-sm focus:outline-none focus:border-[#FFE600] font-mono transition-colors"
                   required
                 />
               </div>
@@ -167,10 +167,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
               <button
                 type="submit"
                 disabled={cargandoAuth}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold text-sm transition-all shadow-md hover:shadow-teal-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#FFE600] hover:bg-[#ffe81a] text-[#0D0E11] font-extrabold text-sm transition-all shadow-md hover:shadow-[0_0_15px_rgba(255,230,0,0.4)] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 {cargandoAuth ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#0D0E11]" />
                 ) : (
                   <>
                     <Shield className="w-4 h-4" />
@@ -183,23 +183,23 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
             /* Vista del Dashboard de Reportes Pendientes */
             <div className="space-y-6">
               {mensajeExito && (
-                <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-[#FFE600]/10 border border-[#FFE600]/30 text-[#FFE600]">
                   <CheckCircle className="w-4 h-4 shrink-0" />
                   <span>{mensajeExito}</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <span>⚡ Reportes Pendientes</span>
-                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#FFE600]/10 text-[#FFE600] border border-[#FFE600]/30 font-mono">
                     {reportes.length}
                   </span>
                 </h3>
                 <button
                   onClick={() => cargarReportes(tokenActivo)}
                   disabled={cargandoReportes}
-                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-teal-400 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-[#9EA3B0] hover:text-[#FFE600] transition-colors cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${cargandoReportes ? 'animate-spin' : ''}`} />
                   Actualizar
@@ -207,15 +207,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
               </div>
 
               {cargandoReportes ? (
-                <div className="py-12 text-center text-slate-400 space-y-2">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto text-teal-400" />
+                <div className="py-12 text-center text-[#9EA3B0] space-y-2">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#FFE600]" />
                   <p className="text-xs">Cargando reportes pendientes...</p>
                 </div>
               ) : reportes.length === 0 ? (
-                <div className="py-10 text-center bg-slate-950/50 border border-slate-800 rounded-xl space-y-2">
+                <div className="py-10 text-center bg-[#0D0E11] border border-[#262930] rounded-xl space-y-2">
                   <span className="text-3xl">🎉</span>
-                  <h4 className="text-sm font-bold text-slate-200">Todo al día</h4>
-                  <p className="text-xs text-slate-400">
+                  <h4 className="text-sm font-bold text-white">Todo al día</h4>
+                  <p className="text-xs text-[#9EA3B0]">
                     No hay reportes de usuarios pendientes de aprobación.
                   </p>
                 </div>
@@ -224,27 +224,27 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
                   {reportes.map((rep) => (
                     <div
                       key={rep.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl gap-4 hover:border-slate-700 transition-colors"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-[#0D0E11] border border-[#262930] rounded-xl gap-4 hover:border-[#383C46] transition-colors"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-teal-400 font-bold">
+                          <span className="text-xs font-mono text-[#FFE600] font-bold">
                             #{rep.id}
                           </span>
-                          <span className="text-sm font-bold text-slate-100 uppercase">
+                          <span className="text-sm font-bold text-white uppercase">
                             {rep.colonia}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400">
-                          Fecha: <span className="text-slate-300">{rep.fecha}</span> | Hora:{' '}
-                          <span className="text-slate-300">{rep.hora}</span>
+                        <p className="text-xs text-[#9EA3B0]">
+                          Fecha: <span className="text-white font-mono">{rep.fecha}</span> | Hora:{' '}
+                          <span className="text-white font-mono">{rep.hora}</span>
                         </p>
                       </div>
 
                       <button
                         onClick={() => manejarAprobar(rep.id)}
                         disabled={idAprobando === rep.id}
-                        className="w-full sm:w-auto px-4 py-2 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0"
+                        className="w-full sm:w-auto px-4 py-2 rounded-lg bg-[#FFE600] hover:bg-[#ffe81a] text-[#0D0E11] font-bold text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
                       >
                         {idAprobando === rep.id ? (
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -265,14 +265,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({ modalAbierto, onCerrar }
 
         {/* Footer del Modal */}
         {tokenActivo && (
-          <div className="flex items-center justify-between p-4 border-t border-slate-800 bg-slate-950/60">
-            <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <div className="flex items-center justify-between p-4 border-t border-[#262930] bg-[#0D0E11]/60">
+            <span className="text-[11px] text-[#FFE600] font-medium flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#FFE600] animate-pulse"></span>
               Sesión de Admin Activa
             </span>
             <button
               onClick={manejarCerrarSesion}
-              className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors"
+              className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               Cerrar Sesión Admin
