@@ -13,22 +13,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Monitor de Apagones - Lázaro Cárdenas",
-  description: "Predicción en tiempo real del riesgo de apagones por colonia en Lázaro Cárdenas, Michoacán.",
+  title: "Voltlyzer LC - Sistema de Monitoreo Predictivo de Red Eléctrica",
+  description: "Monitoreo y predicción en tiempo real del riesgo de fallas e interrupciones eléctricas por colonia en Lázaro Cárdenas, Michoacán.",
   openGraph: {
-    title: "Monitor de Apagones - Lázaro Cárdenas",
-    description: "Predicción en tiempo real del riesgo de apagones por colonia.",
-    url: "https://monitor-lazarocardenas.vercel.app",
-    siteName: "Monitor de Apagones",
+    title: "Voltlyzer LC - Monitoreo Predictivo de Red Eléctrica",
+    description: "Predicción en tiempo real del riesgo de fallas e interrupciones eléctricas por colonia en Lázaro Cárdenas, Michoacán.",
+    url: "https://voltlyzer-lc.vercel.app",
+    siteName: "Voltlyzer LC",
     images: [
       {
-        url: "https://monitor-lazarocardenas.vercel.app/og-image.png",
+        url: "https://voltlyzer-lc.vercel.app/LOGO_VOLTLYZER.png",
         width: 1200,
         height: 630,
+        alt: "Voltlyzer LC Logo y Vista Previa Social",
       },
     ],
     locale: "es_MX",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Voltlyzer LC - Monitoreo Predictivo de Red Eléctrica",
+    description: "Predicción en tiempo real del riesgo de fallas eléctricas por colonia en Lázaro Cárdenas, Mich.",
+    images: ["https://voltlyzer-lc.vercel.app/LOGO_VOLTLYZER.png"],
   },
 };
 
@@ -42,7 +49,7 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#0D0E11] text-white">{children}</body>
     </html>
   );
 }
