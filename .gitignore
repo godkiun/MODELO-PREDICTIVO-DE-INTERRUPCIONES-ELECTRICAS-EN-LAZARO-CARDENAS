@@ -1,57 +1,95 @@
-# Dependencias de Node.js
+# ==========================================
+# 🔒 VARIABLES DE ENTORNO Y CONFIDENCIALES
+# ==========================================
+.env
+.env.*
+!.env.example
+*.env
+*.pem
+*.key
+*.crt
+mcp_config.json
+**/mcp_config.json
+.agents/
+
+# ==========================================
+# 📦 NODE.JS / FRONTEND DEPENDENCIAS Y BUILDS
+# ==========================================
+node_modules/
 **/node_modules/
+.next/
 **/.next/
+out/
 **/out/
+build/
 **/build/
+dist/
+**/dist/
+.turbo/
+.cache/
+next-env.d.ts.bak
 
-# Archivos compilados de Python
+# ==========================================
+# 🐍 PYTHON / BACKEND CACHÉ Y VIRTUAL ENVS
+# ==========================================
+__pycache__/
 **/__pycache__/
-**/*.pyc
-**/*.pyo
-**/*.pyd
-
-# Base de datos (SQLite)
-# Las bases de datos locales suelen cambiar constantemente y ser pesadas.
-# Se ignoran para que cada clon inicialice su base de datos.
-**/*.db
-**/*.sqlite3
-
-# Modelos entrenados (Pickle)
-# Se ignoran porque son binarios pesados que pueden reconstruirse
-# ejecutando los scripts de entrenamiento (crear_dataset.py y entrenar_modelo_zonal.py).
-**/*.pkl
-
-# Entorno Virtual de Python
-.venv/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
 venv/
+.venv/
 env/
 ENV/
+venv.bak/
+env.bak/
 
-# Variables de Entorno y Configuración Sensible
-**/.env
-**/.env.local
-**/.env.development.local
-**/.env.test.local
-**/.env.production.local
+# ==========================================
+# 🗄️ BASES DE DATOS LOCALES Y MODELOS BINARIOS
+# ==========================================
+# Se ignoran bases de datos locales y binarios de IA pesados
+# para que cada clon los genere ejecutando los scripts correspondientes.
+*.db
+*.sqlite3
+*.pkl
+*.joblib
 
-# Archivos del Sistema Operativo
-**/.DS_Store
-**/Thumbs.db
-**/*.pem
+# ==========================================
+# 📄 DOCUMENTACIÓN SUELTA Y ARCHIVOS SECUNDARIOS
+# ==========================================
+ARQUITECTURA_PROYECTO.md
+tecnologias_proyecto.txt
+documentacion_*.md
 
-# Logs
-**/*.log
-**/npm-debug.log*
-**/yarn-debug.log*
-**/yarn-error.log*
-**/pnpm-debug.log*
+# ==========================================
+# 💻 ARCHIVOS DEL SISTEMA OPERATIVO Y IDEs
+# ==========================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# Configuraciones de editores
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.tmp
+
+# ==========================================
+# 📋 LOGS Y TEMPORALES
+# ==========================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 commits.txt

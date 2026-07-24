@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "devops-manager": {
+      "command": "node",
+      "args": [
+        "C:/Users/52753/Desktop/MODELO PREDICTIVO DE INTERRUPCIONES ELECTRICAS EN LAZARO CARDENAS/mcp-devops-server/dist/index.js"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "TU_GITHUB_TOKEN",
+        "GITHUB_OWNER": "godkiun",
+        "GITHUB_REPO": "MODELO-PREDICTIVO-DE-INTERRUPCIONES-ELECTRICAS-EN-LAZARO-CARDENAS",
+        "VERCEL_TOKEN": "TU_VERCEL_TOKEN",
+        "VERCEL_PROJECT_ID": "prj_FPpFBAEAlTc2HjkWWVb8KY8lXXe3",
+        "VERCEL_TEAM_ID": "RFBN",
+        "PYTHONANYWHERE_TOKEN": "TU_PYTHONANYWHERE_TOKEN",
+        "PYTHONANYWHERE_USERNAME": "Ronadev",
+        "PYTHONANYWHERE_DOMAIN": "Ronadev.pythonanywhere.com"
+      }
+    }
+  }
+}
